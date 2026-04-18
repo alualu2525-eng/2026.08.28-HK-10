@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026港澳吃喝團之小馬哥首航</title>
+
+<link rel="manifest" href="manifest.json">
+<script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+
+<style>
+body{margin:0;font-family:sans-serif;}
+.bg{
+background:url('https://images.unsplash.com/photo-1506973035872-a4f23ef3d6f8') center/cover;
+min-height:100vh;
+}
+.card{
+background:rgba(255,255,255,0.95);
+padding:16px;border-radius:16px;margin:12px;
+}
+img{width:100%;border-radius:10px;}
+button{width:100%;padding:10px;background:black;color:white;border-radius:10px;}
+</style>
+</head>
+
+<body>
+<div id="app" class="bg">
+
+<div class="card">
+<h2>🌤 即時天氣</h2>
+<div v-if="weather">
+香港 {{weather.hk.temp}}°C {{weather.hk.desc}}<br>
+澳門 {{weather.mo.temp}}°C {{weather.mo.desc}}
+</div>
+</div>
+
+<div class="card" v-for="p in plans">
+<img :src="p.img">
+<h3>{{p.name}}</h3>
+<p>{{p.route}}</p>
+<button @click="nav(p)">📍導航</button>
+</div>
+
+</div>
+
+<script>
+async function getWeather(){
+let hk=await fetch("https://api.openweathermap.org/data/2.5/weather?q=HongKong&appid=YOUR_KEY&units=metric");
+let mo=await fetch("https://api.openweathermap.org/data/2.5/weather?q=Macau&appid=YOUR_KEY&units=metric");
+
+hk=await hk.json();
+mo=await mo.json();
+
+return {
+hk:{temp:hk.main.temp,desc:hk.weather[0].main},
+mo:{temp:mo.main.temp,desc:mo.weather[0].main}
+}
+}
+
+const {createApp,ref,onMounted}=Vue;
+
+createApp({
+setup(){
+
+const weather=ref(null);
+
+const plans=[
+{
+name:"大三巴",
+img:"https://images.unsplash.com/photo-1549893079-842e4e4c6d3f",
+route:"看到人潮往上走就是",
+lat:22.197,lng:113.541
+}
+];
+
+function nav(p){
+if(/iPhone/.test(navigator.userAgent)){
+location.href=`http://maps.apple.com/?ll=${p.lat},${p.lng}`;
+}else{
+location.href=`https://www.google.com/maps?q=${p.lat},${p.lng}`;
+}
+}
+
+onMounted(async()=>{
+weather.value=await getWeather();
+});
+
+return{weather,plans,nav}
+}
+}).mount("#app");
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+navigator.serviceWorker.register('sw.js');
+}
+</script>
+
+</body>
+</html>
